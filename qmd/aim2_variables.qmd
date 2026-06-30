@@ -62,23 +62,23 @@ any_box <- function(df, cols) {
 
 # REDCap
 
-| Variable | Type | Definition |
+| Variable | Type | Definition (REDCap source fields) |
 |---|---|---|
-| `sex`, `race`, `ethnicity`, `study_arm` | factor | Pre-baseline demographics, labelled |
-| `cirrhosis` | 0/1 | `comorb_gi___9` |
-| `asvcd` | 0/1 | `comorb_cardiac___1` OR `comorb_neuro___3` |
-| `chf` | 0/1 | `comorb_cardiac___5` |
-| `hypertension` | 0/1 | `comorb_cardiac___4` |
-| `copd` | 0/1 | `comorb_pulm___2` |
-| `diabetes` | 0/1 | `comorb_endocrine___3` OR `comorb_endocrine___4` |
-| `autoimmune_history` | 0/1 | 1 if any of 18 autoimmune comorbidity boxes is checked |
-| `baseline_egfr` | continuous | `egfr` at baseline event (mL/min/1.73 m²) |
-| `baseline_ckd_stage` | factor G1–G5 | KDIGO GFR categories of `baseline_egfr` |
-| `baseline_ckd_binary` | 0/1 | 1 if eGFR <60 (G3a–G5) |
-| `baseline_ici_treatment` | factor (11) | `ici_type` at early-treatment event |
-| `ici_regimen_class` | factor (4) | mechanism class of `ici_type` |
-| `ppi`, `antibiotic`, `tmp_smx`, `nsaid`, `allopurinol`, `antiepileptic` | 0/1 | structured REDCap field OR `con_med` free-text match |
-| `AIN_con_med_any` | 0/1 | 1 if any of the six medication classes is present |
+| `sex`, `race`, `ethnicity`, `study_arm` | factor | REDCap `sex`, `race`, `ethnicity`, `study_arm` (pre-baseline), labelled as factors |
+| `cirrhosis` | 0/1 | REDCap `comorb_gi___9` |
+| `asvcd` | 0/1 | REDCap `comorb_cardiac___1` OR `comorb_neuro___3` |
+| `chf` | 0/1 | REDCap `comorb_cardiac___5` |
+| `hypertension` | 0/1 | REDCap `comorb_cardiac___4` |
+| `copd` | 0/1 | REDCap `comorb_pulm___2` |
+| `diabetes` | 0/1 | REDCap `comorb_endocrine___3` OR `comorb_endocrine___4` |
+| `autoimmune_history` | 0/1 | 1 if **any** of 18 REDCap boxes checked: `comorb_rheum___1`, `comorb_rheum___3`, `comorb_pulm___3`, `comorb_cardiac___6`, `comorb_gi___1`, `comorb_gi___3`, `comorb_gi___4`, `comorb_gi___5`, `comorb_gi___8`, `comorb_derm___1`, `comorb_derm___2`, `comorb_derm___3`, `comorb_derm___4`, `comorb_neuro___1`, `comorb_neuro___2`, `comorb_endocrine___2`, `comorb_endocrine___3`, `comorb_heme___1` |
+| `baseline_egfr` | continuous | REDCap `egfr` at baseline event (mL/min/1.73 m²) |
+| `baseline_ckd_stage` | factor G1–G5 | KDIGO GFR categories of REDCap `egfr` |
+| `baseline_ckd_binary` | 0/1 | 1 if REDCap `egfr` <60 (G3a–G5) |
+| `baseline_ici_treatment` | factor (11) | REDCap `ici_type` at early-treatment event |
+| `ici_regimen_class` | factor (4) | mechanism class of REDCap `ici_type` |
+| `ppi`, `antibiotic`, `tmp_smx`, `nsaid`, `allopurinol`, `antiepileptic` | 0/1 | structured REDCap field — `ppi`, `nephrotox_drugs___1` (antibiotic), `___2` (tmp_smx), `___3` (nsaid), `___4` (allopurinol), `___5` (antiepileptic) — OR a `con_med` free-text match |
+| `AIN_con_med_any` | 0/1 | 1 if any of the six medication classes above is present |
 
 ```{r}
 #| label: demographics
@@ -241,10 +241,10 @@ medications <- bind_cols(record_id = prebaseline$record_id, med_flags) %>%
 
 # RPDR
 
-| Variable | Type | Definition |
+| Variable | Type | Definition (RPDR value, anchored on REDCap fields) |
 |---|---|---|
-| `baseline_hgb` | continuous | RPDR hemoglobin closest to baseline visit (±30 d; ties prefer prior) |
-| `baseline_albumin` | continuous | RPDR albumin closest to baseline visit (±30 d; ties prefer prior) |
+| `baseline_hgb` | continuous | RPDR hemoglobin (`Group_Id` = `HGB`) closest to the baseline visit, anchored on REDCap `visit_date` and joined via REDCap `EMPI` (±30 d; ties prefer prior) |
+| `baseline_albumin` | continuous | RPDR albumin (`Group_Id` = `ALB`) closest to the baseline visit, anchored on REDCap `visit_date` and joined via REDCap `EMPI` (±30 d; ties prefer prior) |
 
 > Requires an `EMPI` ↔ `record_id` crosswalk so RPDR (keyed by `EMPI`) can join
 > to REDCap (keyed by `record_id`). This block is `eval: false` until the RPDR

@@ -272,84 +272,84 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="header">
 <th>Variable</th>
 <th>Type</th>
-<th>Definition</th>
+<th>Definition (REDCap source fields)</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
 <td><code>sex</code>, <code>race</code>, <code>ethnicity</code>, <code>study_arm</code></td>
 <td>factor</td>
-<td>Pre-baseline demographics, labelled</td>
+<td>REDCap <code>sex</code>, <code>race</code>, <code>ethnicity</code>, <code>study_arm</code> (pre-baseline), labelled as factors</td>
 </tr>
 <tr class="even">
 <td><code>cirrhosis</code></td>
 <td>0/1</td>
-<td><code>comorb_gi___9</code></td>
+<td>REDCap <code>comorb_gi___9</code></td>
 </tr>
 <tr class="odd">
 <td><code>asvcd</code></td>
 <td>0/1</td>
-<td><code>comorb_cardiac___1</code> OR <code>comorb_neuro___3</code></td>
+<td>REDCap <code>comorb_cardiac___1</code> OR <code>comorb_neuro___3</code></td>
 </tr>
 <tr class="even">
 <td><code>chf</code></td>
 <td>0/1</td>
-<td><code>comorb_cardiac___5</code></td>
+<td>REDCap <code>comorb_cardiac___5</code></td>
 </tr>
 <tr class="odd">
 <td><code>hypertension</code></td>
 <td>0/1</td>
-<td><code>comorb_cardiac___4</code></td>
+<td>REDCap <code>comorb_cardiac___4</code></td>
 </tr>
 <tr class="even">
 <td><code>copd</code></td>
 <td>0/1</td>
-<td><code>comorb_pulm___2</code></td>
+<td>REDCap <code>comorb_pulm___2</code></td>
 </tr>
 <tr class="odd">
 <td><code>diabetes</code></td>
 <td>0/1</td>
-<td><code>comorb_endocrine___3</code> OR <code>comorb_endocrine___4</code></td>
+<td>REDCap <code>comorb_endocrine___3</code> OR <code>comorb_endocrine___4</code></td>
 </tr>
 <tr class="even">
 <td><code>autoimmune_history</code></td>
 <td>0/1</td>
-<td>1 if any of 18 autoimmune comorbidity boxes is checked</td>
+<td>1 if <strong>any</strong> of 18 REDCap boxes checked: <code>comorb_rheum___1</code>, <code>comorb_rheum___3</code>, <code>comorb_pulm___3</code>, <code>comorb_cardiac___6</code>, <code>comorb_gi___1</code>, <code>comorb_gi___3</code>, <code>comorb_gi___4</code>, <code>comorb_gi___5</code>, <code>comorb_gi___8</code>, <code>comorb_derm___1</code>, <code>comorb_derm___2</code>, <code>comorb_derm___3</code>, <code>comorb_derm___4</code>, <code>comorb_neuro___1</code>, <code>comorb_neuro___2</code>, <code>comorb_endocrine___2</code>, <code>comorb_endocrine___3</code>, <code>comorb_heme___1</code></td>
 </tr>
 <tr class="odd">
 <td><code>baseline_egfr</code></td>
 <td>continuous</td>
-<td><code>egfr</code> at baseline event (mL/min/1.73 m²)</td>
+<td>REDCap <code>egfr</code> at baseline event (mL/min/1.73 m²)</td>
 </tr>
 <tr class="even">
 <td><code>baseline_ckd_stage</code></td>
 <td>factor G1–G5</td>
-<td>KDIGO GFR categories of <code>baseline_egfr</code></td>
+<td>KDIGO GFR categories of REDCap <code>egfr</code></td>
 </tr>
 <tr class="odd">
 <td><code>baseline_ckd_binary</code></td>
 <td>0/1</td>
-<td>1 if eGFR &lt;60 (G3a–G5)</td>
+<td>1 if REDCap <code>egfr</code> &lt;60 (G3a–G5)</td>
 </tr>
 <tr class="even">
 <td><code>baseline_ici_treatment</code></td>
 <td>factor (11)</td>
-<td><code>ici_type</code> at early-treatment event</td>
+<td>REDCap <code>ici_type</code> at early-treatment event</td>
 </tr>
 <tr class="odd">
 <td><code>ici_regimen_class</code></td>
 <td>factor (4)</td>
-<td>mechanism class of <code>ici_type</code></td>
+<td>mechanism class of REDCap <code>ici_type</code></td>
 </tr>
 <tr class="even">
 <td><code>ppi</code>, <code>antibiotic</code>, <code>tmp_smx</code>, <code>nsaid</code>, <code>allopurinol</code>, <code>antiepileptic</code></td>
 <td>0/1</td>
-<td>structured REDCap field OR <code>con_med</code> free-text match</td>
+<td>structured REDCap field — <code>ppi</code>, <code>nephrotox_drugs___1</code> (antibiotic), <code>___2</code> (tmp_smx), <code>___3</code> (nsaid), <code>___4</code> (allopurinol), <code>___5</code> (antiepileptic) — OR a <code>con_med</code> free-text match</td>
 </tr>
 <tr class="odd">
 <td><code>AIN_con_med_any</code></td>
 <td>0/1</td>
-<td>1 if any of the six medication classes is present</td>
+<td>1 if any of the six medication classes above is present</td>
 </tr>
 </tbody>
 </table>
@@ -532,19 +532,19 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="header">
 <th>Variable</th>
 <th>Type</th>
-<th>Definition</th>
+<th>Definition (RPDR value, anchored on REDCap fields)</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
 <td><code>baseline_hgb</code></td>
 <td>continuous</td>
-<td>RPDR hemoglobin closest to baseline visit (±30 d; ties prefer prior)</td>
+<td>RPDR hemoglobin (<code>Group_Id</code> = <code>HGB</code>) closest to the baseline visit, anchored on REDCap <code>visit_date</code> and joined via REDCap <code>EMPI</code> (±30 d; ties prefer prior)</td>
 </tr>
 <tr class="even">
 <td><code>baseline_albumin</code></td>
 <td>continuous</td>
-<td>RPDR albumin closest to baseline visit (±30 d; ties prefer prior)</td>
+<td>RPDR albumin (<code>Group_Id</code> = <code>ALB</code>) closest to the baseline visit, anchored on REDCap <code>visit_date</code> and joined via REDCap <code>EMPI</code> (±30 d; ties prefer prior)</td>
 </tr>
 </tbody>
 </table>
