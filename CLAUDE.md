@@ -33,9 +33,9 @@ Hand-off notes for a fresh session:
   this guidance file. `qmd/aim2_variables.qmd` implements every variable defined
   in `Tianqi_SAP.docx` and writes `aim2_master.rds`. The site renders with
   `eval: false`, so it builds for review before any PHI data is present.
-- **Published:** GitHub repo **https://github.com/Tianqi-Ouyang/aim-2-**
+- **Published:** GitHub repo **https://github.com/Tianqi-Ouyang/aim-2**
   (branch `main`); live site via GitHub Pages at
-  **https://tianqi-ouyang.github.io/aim-2-/** (served from `/docs`, `.nojekyll`
+  **https://tianqi-ouyang.github.io/aim-2/** (served from `/docs`, `.nojekyll`
   kept as a Quarto resource).
 - **What's NOT done yet:** no real data is wired in — set `redcap_path` /
   `rpdr_lab_path` in the `#| label: config` chunk when the export arrives; the
