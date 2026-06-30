@@ -151,20 +151,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#purpose" id="toc-purpose" class="nav-link active" data-scroll-target="#purpose">0 Purpose</a></li>
-  <li><a href="#configuration-input-files" id="toc-configuration-input-files" class="nav-link" data-scroll-target="#configuration-input-files">1 Configuration — input files</a></li>
-  <li><a href="#load-redcap-split-by-event" id="toc-load-redcap-split-by-event" class="nav-link" data-scroll-target="#load-redcap-split-by-event">2 Load REDCap &amp; split by event</a></li>
-  <li><a href="#demographics-pre-baseline" id="toc-demographics-pre-baseline" class="nav-link" data-scroll-target="#demographics-pre-baseline">3 Demographics (Pre-baseline)</a></li>
-  <li><a href="#baseline-comorbidities-pre-baseline" id="toc-baseline-comorbidities-pre-baseline" class="nav-link" data-scroll-target="#baseline-comorbidities-pre-baseline">4 Baseline comorbidities (Pre-baseline)</a>
-  <ul>
-  <li><a href="#derived-autoimmune-history-autoimmune_history" id="toc-derived-autoimmune-history-autoimmune_history" class="nav-link" data-scroll-target="#derived-autoimmune-history-autoimmune_history">4.1 Derived: Autoimmune history (<code>autoimmune_history</code>)</a></li>
-  </ul></li>
-  <li><a href="#baseline-kidney-function-baseline-event" id="toc-baseline-kidney-function-baseline-event" class="nav-link" data-scroll-target="#baseline-kidney-function-baseline-event">5 Baseline kidney function (Baseline event)</a></li>
-  <li><a href="#baseline-ici-treatment-early-treatment-event" id="toc-baseline-ici-treatment-early-treatment-event" class="nav-link" data-scroll-target="#baseline-ici-treatment-early-treatment-event">6 Baseline ICI treatment (Early Treatment event)</a></li>
-  <li><a href="#baseline-concomitant-medications-pre-baseline" id="toc-baseline-concomitant-medications-pre-baseline" class="nav-link" data-scroll-target="#baseline-concomitant-medications-pre-baseline">7 Baseline concomitant medications (Pre-baseline)</a></li>
-  <li><a href="#baseline-rpdr-labs-closest-to-baseline-visit" id="toc-baseline-rpdr-labs-closest-to-baseline-visit" class="nav-link" data-scroll-target="#baseline-rpdr-labs-closest-to-baseline-visit">8 Baseline RPDR labs (closest to baseline visit)</a></li>
-  <li><a href="#assemble-one-row-per-participant" id="toc-assemble-one-row-per-participant" class="nav-link" data-scroll-target="#assemble-one-row-per-participant">9 Assemble one row per participant</a></li>
-  <li><a href="#variable-dictionary-created-here" id="toc-variable-dictionary-created-here" class="nav-link" data-scroll-target="#variable-dictionary-created-here">10 Variable dictionary (created here)</a></li>
+  <li><a href="#redcap" id="toc-redcap" class="nav-link active" data-scroll-target="#redcap">REDCap</a></li>
+  <li><a href="#rpdr" id="toc-rpdr" class="nav-link" data-scroll-target="#rpdr">RPDR</a></li>
   </ul>
 </nav>
 </nav>
@@ -206,22 +194,16 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<section id="purpose" class="level1">
-<h1>0 Purpose</h1>
-<p>This file builds every <strong>analysis variable specified in the Aim 2 Statistical Analysis Plan</strong> (<code>Tianqi_SAP.docx</code>) from the longitudinal REDCap export and the RPDR laboratory pull. It produces one row per participant (<code>aim2_master.rds</code>) that the downstream Table 1 / analysis files consume.</p>
-<p>Aim 2 is a melanoma + immune-checkpoint-inhibitor (ICI) cohort examining acute interstitial nephritis (AIN). Study arms:</p>
-<ol type="1">
-<li>Metastatic melanoma receiving ICI</li>
-<li>Adjuvant stage II–III melanoma receiving ICI</li>
-<li>Control stage I–IIIA melanoma <strong>not</strong> receiving ICI</li>
-</ol>
+<p>This file builds every analysis variable specified in the Aim 2 Statistical Analysis Plan (<code>Tianqi_SAP.docx</code>) from two data sources and writes one row per participant (<code>aim2_master.rds</code>) for the downstream Table 1 / analysis files.</p>
+<p>Variables are grouped by <strong>data source</strong>:</p>
+<ul>
+<li><strong>REDCap</strong> — the longitudinal study database (demographics, comorbidities, kidney function, ICI regimen, concomitant medications).</li>
+<li><strong>RPDR</strong> — the hospital laboratory pull (baseline hemoglobin and albumin).</li>
+</ul>
+<p>Each table below lists the variable, its type, and its definition. The R code that creates it is hidden — click <strong>► Code</strong> to expand any block.</p>
 <blockquote class="blockquote">
-<p><strong>REDCap structure.</strong> This is a <em>longitudinal</em> project. The export has one row per (<code>record_id</code> × <code>redcap_event_name</code>). Variables live in specific events, so each block below pulls its variables from the correct event and the blocks are joined back to one row per <code>record_id</code>:</p>
+<p><strong>REDCap is longitudinal.</strong> The export has one row per (<code>record_id</code> × <code>redcap_event_name</code>); each variable is pulled from its event, then joined back to one row per <code>record_id</code>:</p>
 <table class="caption-top table">
-<colgroup>
-<col style="width: 50%">
-<col style="width: 50%">
-</colgroup>
 <thead>
 <tr class="header">
 <th>Event (<code>redcap_event_name</code>)</th>
@@ -231,15 +213,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tbody>
 <tr class="odd">
 <td><code>prebaseline_arm_1</code></td>
-<td>demographics, comorbidities, concomitant meds (<code>ppi</code>, <code>nephrotox_drugs___*</code>, <code>con_med</code>)</td>
+<td>demographics, comorbidities, concomitant meds</td>
 </tr>
 <tr class="even">
 <td><code>baseline_arm_1</code></td>
-<td><code>egfr</code>, baseline <code>visit_date</code></td>
+<td><code>egfr</code>, baseline <code>visit_date</code>, <code>EMPI</code></td>
 </tr>
 <tr class="odd">
 <td><code>early_treatment_we_arm_1</code></td>
-<td><code>ici_type</code> (defines baseline ICI regimen)</td>
+<td><code>ici_type</code> (baseline ICI regimen)</td>
 </tr>
 </tbody>
 </table>
@@ -252,300 +234,34 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(lubridate)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 </div>
-</section>
-<section id="configuration-input-files" class="level1">
-<h1>1 Configuration — input files</h1>
-<blockquote class="blockquote">
-<p><strong>FILL IN once the Aim 2 data arrives.</strong> The variable logic below is fully specified by the SAP; only these paths are project-specific.</p>
-</blockquote>
 <div class="cell">
 <details class="code-fold">
 <summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Longitudinal REDCap export for the melanoma/ICI/AIN project</span></span>
-<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>redcap_path <span class="ot">&lt;-</span> <span class="st">"Data/AIM2_REDCAP_DATA.csv"</span>          <span class="co"># &lt;-- set me</span></span>
-<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co"># RPDR laboratory pull (pipe-delimited .txt), keyed by EMPI.</span></span>
-<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Needed only for baseline_hgb / baseline_albumin (closest lab to baseline visit).</span></span>
-<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>rpdr_lab_path <span class="ot">&lt;-</span> <span class="st">"Data/AIM2_RPDR_Lab.txt"</span>           <span class="co"># &lt;-- set me</span></span>
-<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="co"># RPDR Group_Id labels for the two labs we need from RPDR</span></span>
-<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a>HGB_GROUP <span class="ot">&lt;-</span> <span class="st">"HGB"</span>   <span class="co"># hemoglobin Group_Id in the RPDR pull</span></span>
-<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>ALB_GROUP <span class="ot">&lt;-</span> <span class="st">"ALB"</span>   <span class="co"># albumin   Group_Id in the RPDR pull</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># --- FILL IN once the Aim 2 data arrives (logic below is fully SAP-specified) ---</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>redcap_path   <span class="ot">&lt;-</span> <span class="st">"Data/AIM2_REDCAP_DATA.csv"</span>   <span class="co"># longitudinal REDCap export</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>rpdr_lab_path <span class="ot">&lt;-</span> <span class="st">"Data/AIM2_RPDR_Lab.txt"</span>       <span class="co"># RPDR lab pull (pipe-delimited), keyed by EMPI</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a>HGB_GROUP     <span class="ot">&lt;-</span> <span class="st">"HGB"</span>   <span class="co"># hemoglobin Group_Id in the RPDR pull</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a>ALB_GROUP     <span class="ot">&lt;-</span> <span class="st">"ALB"</span>   <span class="co"># albumin   Group_Id in the RPDR pull</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 </div>
-</section>
-<section id="load-redcap-split-by-event" class="level1">
-<h1>2 Load REDCap &amp; split by event</h1>
 <div class="cell">
 <details class="code-fold">
 <summary>Code</summary>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>raw <span class="ot">&lt;-</span> <span class="fu">read_csv</span>(redcap_path, <span class="at">show_col_types =</span> <span class="cn">FALSE</span>)</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Defensive: REDCap exports the event column as redcap_event_name.</span></span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="fu">stopifnot</span>(<span class="st">"redcap_event_name"</span> <span class="sc">%in%</span> <span class="fu">names</span>(raw))</span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>prebaseline <span class="ot">&lt;-</span> raw <span class="sc">%&gt;%</span> <span class="fu">filter</span>(redcap_event_name <span class="sc">==</span> <span class="st">"prebaseline_arm_1"</span>)</span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>baseline    <span class="ot">&lt;-</span> raw <span class="sc">%&gt;%</span> <span class="fu">filter</span>(redcap_event_name <span class="sc">==</span> <span class="st">"baseline_arm_1"</span>)</span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>early_tx    <span class="ot">&lt;-</span> raw <span class="sc">%&gt;%</span> <span class="fu">filter</span>(redcap_event_name <span class="sc">==</span> <span class="st">"early_treatment_we_arm_1"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="fu">stopifnot</span>(<span class="st">"redcap_event_name"</span> <span class="sc">%in%</span> <span class="fu">names</span>(raw))</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>prebaseline <span class="ot">&lt;-</span> raw <span class="sc">%&gt;%</span> <span class="fu">filter</span>(redcap_event_name <span class="sc">==</span> <span class="st">"prebaseline_arm_1"</span>)</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>baseline    <span class="ot">&lt;-</span> raw <span class="sc">%&gt;%</span> <span class="fu">filter</span>(redcap_event_name <span class="sc">==</span> <span class="st">"baseline_arm_1"</span>)</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>early_tx    <span class="ot">&lt;-</span> raw <span class="sc">%&gt;%</span> <span class="fu">filter</span>(redcap_event_name <span class="sc">==</span> <span class="st">"early_treatment_we_arm_1"</span>)</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Helper: OR across one or more 0/1 checkbox columns → 0/1 (NA treated as 0)</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>any_box <span class="ot">&lt;-</span> <span class="cf">function</span>(df, cols) {</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as.integer</span>(<span class="fu">rowSums</span>(<span class="fu">across</span>(<span class="fu">all_of</span>(cols), <span class="sc">~</span> <span class="fu">replace_na</span>(.x <span class="sc">==</span> <span class="dv">1</span>, <span class="cn">FALSE</span>))) <span class="sc">&gt;</span> <span class="dv">0</span>)</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </details>
 </div>
-</section>
-<section id="demographics-pre-baseline" class="level1">
-<h1>3 Demographics (Pre-baseline)</h1>
-<p>Stored as numeric REDCap codes; labelled here as factors for Table 1.</p>
-<div class="cell">
-<details class="code-fold">
-<summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>demographics <span class="ot">&lt;-</span> prebaseline <span class="sc">%&gt;%</span></span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">transmute</span>(</span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    record_id,</span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">sex =</span> <span class="fu">factor</span>(sex, <span class="at">levels =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>),</span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>                 <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">"Male"</span>, <span class="st">"Female"</span>, <span class="st">"Other"</span>)),</span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">race =</span> <span class="fu">factor</span>(race, <span class="at">levels =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>, <span class="dv">4</span>),</span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>                  <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">"White"</span>, <span class="st">"Black"</span>, <span class="st">"Asian"</span>, <span class="st">"Other"</span>)),</span>
-<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">ethnicity =</span> <span class="fu">factor</span>(ethnicity, <span class="at">levels =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>),</span>
-<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>                       <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">"Hispanic"</span>, <span class="st">"Non-Hispanic"</span>)),</span>
-<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">study_arm =</span> <span class="fu">factor</span>(</span>
-<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>      study_arm, <span class="at">levels =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>),</span>
-<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>      <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">"Metastatic melanoma + ICI"</span>,</span>
-<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>                 <span class="st">"Adjuvant stage II–III melanoma + ICI"</span>,</span>
-<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>                 <span class="st">"Control stage I–IIIA melanoma, no ICI"</span>))</span>
-<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
-</div>
-</section>
-<section id="baseline-comorbidities-pre-baseline" class="level1">
-<h1>4 Baseline comorbidities (Pre-baseline)</h1>
-<p>REDCap checkbox fields export as <code>field___N</code> coded 0/1. Composite comorbidities combine the relevant boxes with logical OR; binary comorbidities map a single box. All coded 0 = Absent, 1 = Present.</p>
-<div class="cell">
-<details class="code-fold">
-<summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Helper: OR across one or more 0/1 checkbox columns → 0/1 (NA treated as 0)</span></span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>any_box <span class="ot">&lt;-</span> <span class="cf">function</span>(df, cols) {</span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as.integer</span>(<span class="fu">rowSums</span>(<span class="fu">across</span>(<span class="fu">all_of</span>(cols), <span class="sc">~</span> <span class="fu">replace_na</span>(.x <span class="sc">==</span> <span class="dv">1</span>, <span class="cn">FALSE</span>))) <span class="sc">&gt;</span> <span class="dv">0</span>)</span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>comorbidities <span class="ot">&lt;-</span> prebaseline <span class="sc">%&gt;%</span></span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">transmute</span>(</span>
-<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    record_id,</span>
-<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">cirrhosis    =</span> <span class="fu">any_box</span>(prebaseline, <span class="st">"comorb_gi___9"</span>),</span>
-<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">asvcd        =</span> <span class="fu">any_box</span>(prebaseline, <span class="fu">c</span>(<span class="st">"comorb_cardiac___1"</span>, <span class="st">"comorb_neuro___3"</span>)),</span>
-<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">chf          =</span> <span class="fu">any_box</span>(prebaseline, <span class="st">"comorb_cardiac___5"</span>),</span>
-<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">hypertension =</span> <span class="fu">any_box</span>(prebaseline, <span class="st">"comorb_cardiac___4"</span>),</span>
-<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">copd         =</span> <span class="fu">any_box</span>(prebaseline, <span class="st">"comorb_pulm___2"</span>),</span>
-<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">diabetes     =</span> <span class="fu">any_box</span>(prebaseline, <span class="fu">c</span>(<span class="st">"comorb_endocrine___3"</span>, <span class="st">"comorb_endocrine___4"</span>))</span>
-<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
-</div>
-<section id="derived-autoimmune-history-autoimmune_history" class="level2">
-<h2 class="anchored" data-anchor-id="derived-autoimmune-history-autoimmune_history">4.1 Derived: Autoimmune history (<code>autoimmune_history</code>)</h2>
-<p><code>autoimmune_history</code> = 1 if <strong>any</strong> pre-existing autoimmune comorbidity box is checked, else 0 (SAP §“Derived variable: Autoimmune history”).</p>
-<div class="cell">
-<details class="code-fold">
-<summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>autoimmune_boxes <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="st">"comorb_rheum___1"</span>, <span class="st">"comorb_rheum___3"</span>,</span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="st">"comorb_pulm___3"</span>,</span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="st">"comorb_cardiac___6"</span>,</span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  <span class="st">"comorb_gi___1"</span>, <span class="st">"comorb_gi___3"</span>, <span class="st">"comorb_gi___4"</span>, <span class="st">"comorb_gi___5"</span>, <span class="st">"comorb_gi___8"</span>,</span>
-<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  <span class="st">"comorb_derm___1"</span>, <span class="st">"comorb_derm___2"</span>, <span class="st">"comorb_derm___3"</span>, <span class="st">"comorb_derm___4"</span>,</span>
-<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>  <span class="st">"comorb_neuro___1"</span>, <span class="st">"comorb_neuro___2"</span>,</span>
-<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>  <span class="st">"comorb_endocrine___2"</span>, <span class="st">"comorb_endocrine___3"</span>,</span>
-<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>  <span class="st">"comorb_heme___1"</span></span>
-<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>autoimmune <span class="ot">&lt;-</span> prebaseline <span class="sc">%&gt;%</span></span>
-<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">transmute</span>(record_id,</span>
-<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>            <span class="at">autoimmune_history =</span> <span class="fu">any_box</span>(prebaseline, autoimmune_boxes))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
-</div>
-</section>
-</section>
-<section id="baseline-kidney-function-baseline-event" class="level1">
-<h1>5 Baseline kidney function (Baseline event)</h1>
-<p><code>egfr</code> at <code>baseline_arm_1</code> (mL/min/1.73 m²). CKD stage by KDIGO GFR categories; plus the prespecified collapsed binary (&lt;60 vs ≥60).</p>
-<div class="cell">
-<details class="code-fold">
-<summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>kidney <span class="ot">&lt;-</span> baseline <span class="sc">%&gt;%</span></span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">transmute</span>(</span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>    record_id,</span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">baseline_egfr =</span> <span class="fu">as.numeric</span>(egfr),</span>
-<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">baseline_ckd_stage =</span> <span class="fu">cut</span>(</span>
-<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>      baseline_egfr,</span>
-<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>      <span class="at">breaks =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="cn">Inf</span>, <span class="dv">15</span>, <span class="dv">30</span>, <span class="dv">45</span>, <span class="dv">60</span>, <span class="dv">90</span>, <span class="cn">Inf</span>),</span>
-<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>      <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">"G5"</span>, <span class="st">"G4"</span>, <span class="st">"G3b"</span>, <span class="st">"G3a"</span>, <span class="st">"G2"</span>, <span class="st">"G1"</span>),</span>
-<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>      <span class="at">right  =</span> <span class="cn">FALSE</span>),                              <span class="co"># [lower, upper)</span></span>
-<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>    <span class="co"># KDIGO boundaries are inclusive at the top of each band (e.g. G2 = 60–89,</span></span>
-<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>    <span class="co"># G1 ≥90). right = FALSE with these breaks reproduces that exactly:</span></span>
-<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>    <span class="co">#   &lt;15 G5 · 15–29 G4 · 30–44 G3b · 45–59 G3a · 60–89 G2 · ≥90 G1</span></span>
-<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>    <span class="at">baseline_ckd_binary =</span> <span class="fu">if_else</span>(baseline_egfr <span class="sc">&lt;</span> <span class="dv">60</span>, <span class="dv">1</span>L, <span class="dv">0</span>L)  <span class="co"># 1 = G3a–G5</span></span>
-<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
-<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">baseline_ckd_stage =</span> <span class="fu">factor</span>(</span>
-<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>    baseline_ckd_stage, <span class="at">levels =</span> <span class="fu">c</span>(<span class="st">"G1"</span>, <span class="st">"G2"</span>, <span class="st">"G3a"</span>, <span class="st">"G3b"</span>, <span class="st">"G4"</span>, <span class="st">"G5"</span>)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
-</div>
-</section>
-<section id="baseline-ici-treatment-early-treatment-event" class="level1">
-<h1>6 Baseline ICI treatment (Early Treatment event)</h1>
-<p>Baseline ICI regimen is defined by <code>ici_type</code> recorded at the <strong>Early Treatment (Week 6–12)</strong> event — the most accurate reflection of the established regimen (SAP §“Derived variable: Baseline ICI Treatment”). <code>ici_regimen_class</code> collapses the 11 types into 4 mechanism classes.</p>
-<div class="cell">
-<details class="code-fold">
-<summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>ici <span class="ot">&lt;-</span> early_tx <span class="sc">%&gt;%</span></span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">transmute</span>(</span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    record_id,</span>
-<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    <span class="at">baseline_ici_treatment =</span> <span class="fu">factor</span>(</span>
-<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>      ici_type, <span class="at">levels =</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">11</span>,</span>
-<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>      <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">"Pembrolizumab"</span>, <span class="st">"Nivolumab"</span>, <span class="st">"Ipilimumab"</span>, <span class="st">"Relatlimab"</span>,</span>
-<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>                 <span class="st">"Avelumab"</span>, <span class="st">"Durvalumab"</span>, <span class="st">"Atezolizumab"</span>,</span>
-<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>                 <span class="st">"Nivolumab/Ipilimumab"</span>, <span class="st">"Nivolumab/Relatlimab"</span>,</span>
-<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>                 <span class="st">"Other"</span>, <span class="st">"Not receiving ICI"</span>)),</span>
-<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">ici_regimen_class =</span> <span class="fu">factor</span>(</span>
-<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>      <span class="fu">case_when</span>(</span>
-<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>        ici_type <span class="sc">%in%</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">5</span>, <span class="dv">6</span>, <span class="dv">7</span>) <span class="sc">~</span> <span class="dv">1</span>L,   <span class="co"># PD-(L)1 monotherapy</span></span>
-<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>        ici_type <span class="sc">%in%</span> <span class="fu">c</span>(<span class="dv">3</span>, <span class="dv">8</span>)          <span class="sc">~</span> <span class="dv">2</span>L,   <span class="co"># CTLA-4–containing</span></span>
-<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>        ici_type <span class="sc">%in%</span> <span class="fu">c</span>(<span class="dv">4</span>, <span class="dv">9</span>)          <span class="sc">~</span> <span class="dv">3</span>L,   <span class="co"># LAG-3–containing</span></span>
-<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>        ici_type <span class="sc">%in%</span> <span class="fu">c</span>(<span class="dv">10</span>, <span class="dv">11</span>)        <span class="sc">~</span> <span class="dv">4</span>L    <span class="co"># Other / No active ICI</span></span>
-<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>      ),</span>
-<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>      <span class="at">levels =</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">4</span>,</span>
-<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>      <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">"PD-(L)1 monotherapy"</span>, <span class="st">"CTLA-4–containing"</span>,</span>
-<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>                 <span class="st">"LAG-3–containing"</span>, <span class="st">"Other/No active ICI"</span>))</span>
-<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
-</div>
-</section>
-<section id="baseline-concomitant-medications-pre-baseline" class="level1">
-<h1>7 Baseline concomitant medications (Pre-baseline)</h1>
-<p>Six AIN-associated medication classes. Exposure = present (1) if the <strong>structured REDCap field equals 1 OR</strong> a generic/brand search term is found in the free-text <code>con_med</code> field (case-insensitive). Then <code>AIN_con_med_any</code> = 1 if any of the six classes is present.</p>
-<div class="cell">
-<details class="code-fold">
-<summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Free-text search terms per class (SAP medication-class table). Each term is</span></span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="co"># matched case-insensitively as a word-boundary regex against con_med.</span></span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>search_terms <span class="ot">&lt;-</span> <span class="fu">list</span>(</span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">ppi =</span> <span class="fu">c</span>(<span class="st">"omeprazole"</span>,<span class="st">"Prilosec"</span>,<span class="st">"esomeprazole"</span>,<span class="st">"Nexium"</span>,<span class="st">"pantoprazole"</span>,<span class="st">"Protonix"</span>,</span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>          <span class="st">"lansoprazole"</span>,<span class="st">"Prevacid"</span>,<span class="st">"dexlansoprazole"</span>,<span class="st">"Dexilant"</span>,<span class="st">"rabeprazole"</span>,<span class="st">"Aciphex"</span>),</span>
-<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">antibiotic =</span> <span class="fu">c</span>(<span class="st">"amoxicillin"</span>,<span class="st">"Augmentin"</span>,<span class="st">"penicillin"</span>,<span class="st">"ampicillin"</span>,<span class="st">"dicloxacillin"</span>,</span>
-<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>          <span class="st">"cephalexin"</span>,<span class="st">"Keflex"</span>,<span class="st">"cefazolin"</span>,<span class="st">"ceftriaxone"</span>,<span class="st">"Rocephin"</span>,<span class="st">"cefepime"</span>,</span>
-<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>          <span class="st">"cefpodoxime"</span>,<span class="st">"cefdinir"</span>,<span class="st">"ciprofloxacin"</span>,<span class="st">"Cipro"</span>,<span class="st">"levofloxacin"</span>,<span class="st">"Levaquin"</span>,</span>
-<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>          <span class="st">"moxifloxacin"</span>,<span class="st">"Avelox"</span>,<span class="st">"azithromycin"</span>,<span class="st">"Zithromax"</span>,<span class="st">"clarithromycin"</span>,<span class="st">"Biaxin"</span>,</span>
-<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>          <span class="st">"erythromycin"</span>,<span class="st">"doxycycline"</span>,<span class="st">"minocycline"</span>,<span class="st">"tetracycline"</span>,<span class="st">"clindamycin"</span>,</span>
-<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>          <span class="st">"Cleocin"</span>,<span class="st">"metronidazole"</span>,<span class="st">"Flagyl"</span>,<span class="st">"nitrofurantoin"</span>,<span class="st">"Macrobid"</span>,<span class="st">"fosfomycin"</span>,</span>
-<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>          <span class="st">"Monurol"</span>,<span class="st">"vancomycin"</span>,<span class="st">"linezolid"</span>,<span class="st">"Zyvox"</span>),</span>
-<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">tmp_smx =</span> <span class="fu">c</span>(<span class="st">"trimethoprim-sulfamethoxazole"</span>,<span class="st">"TMP-SMX"</span>,<span class="st">"TMP/SMX"</span>,<span class="st">"sulfamethoxazole"</span>,</span>
-<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>          <span class="st">"cotrimoxazole"</span>,<span class="st">"co-trimoxazole"</span>,<span class="st">"Bactrim"</span>,<span class="st">"Septra"</span>),</span>
-<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>  <span class="at">nsaid =</span> <span class="fu">c</span>(<span class="st">"ibuprofen"</span>,<span class="st">"Advil"</span>,<span class="st">"Motrin"</span>,<span class="st">"naproxen"</span>,<span class="st">"Aleve"</span>,<span class="st">"diclofenac"</span>,<span class="st">"Voltaren"</span>,</span>
-<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>          <span class="st">"indomethacin"</span>,<span class="st">"Indocin"</span>,<span class="st">"meloxicam"</span>,<span class="st">"Mobic"</span>,<span class="st">"celecoxib"</span>,<span class="st">"Celebrex"</span>,</span>
-<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>          <span class="st">"ketorolac"</span>,<span class="st">"Toradol"</span>,<span class="st">"nabumetone"</span>,<span class="st">"Relafen"</span>,<span class="st">"sulindac"</span>,<span class="st">"etodolac"</span>,</span>
-<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a>          <span class="st">"piroxicam"</span>,<span class="st">"Feldene"</span>,<span class="st">"oxaprozin"</span>,<span class="st">"Daypro"</span>),</span>
-<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a>  <span class="at">allopurinol =</span> <span class="fu">c</span>(<span class="st">"allopurinol"</span>,<span class="st">"Zyloprim"</span>,<span class="st">"Aloprim"</span>),</span>
-<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a>  <span class="at">antiepileptic =</span> <span class="fu">c</span>(<span class="st">"carbamazepine"</span>,<span class="st">"Tegretol"</span>,<span class="st">"oxcarbazepine"</span>,<span class="st">"Trileptal"</span>,<span class="st">"phenytoin"</span>,</span>
-<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a>          <span class="st">"Dilantin"</span>,<span class="st">"fosphenytoin"</span>,<span class="st">"Cerebyx"</span>,<span class="st">"lamotrigine"</span>,<span class="st">"Lamictal"</span>,<span class="st">"phenobarbital"</span>)</span>
-<span id="cb9-22"><a href="#cb9-22" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb9-23"><a href="#cb9-23" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-24"><a href="#cb9-24" aria-hidden="true" tabindex="-1"></a><span class="co"># Structured REDCap field backing each class</span></span>
-<span id="cb9-25"><a href="#cb9-25" aria-hidden="true" tabindex="-1"></a>structured_field <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
-<span id="cb9-26"><a href="#cb9-26" aria-hidden="true" tabindex="-1"></a>  <span class="at">ppi           =</span> <span class="st">"ppi"</span>,</span>
-<span id="cb9-27"><a href="#cb9-27" aria-hidden="true" tabindex="-1"></a>  <span class="at">antibiotic    =</span> <span class="st">"nephrotox_drugs___1"</span>,</span>
-<span id="cb9-28"><a href="#cb9-28" aria-hidden="true" tabindex="-1"></a>  <span class="at">tmp_smx       =</span> <span class="st">"nephrotox_drugs___2"</span>,</span>
-<span id="cb9-29"><a href="#cb9-29" aria-hidden="true" tabindex="-1"></a>  <span class="at">nsaid         =</span> <span class="st">"nephrotox_drugs___3"</span>,</span>
-<span id="cb9-30"><a href="#cb9-30" aria-hidden="true" tabindex="-1"></a>  <span class="at">allopurinol   =</span> <span class="st">"nephrotox_drugs___4"</span>,</span>
-<span id="cb9-31"><a href="#cb9-31" aria-hidden="true" tabindex="-1"></a>  <span class="at">antiepileptic =</span> <span class="st">"nephrotox_drugs___5"</span></span>
-<span id="cb9-32"><a href="#cb9-32" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
-</div>
-<div class="cell">
-<details class="code-fold">
-<summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Build a case-insensitive alternation regex per class (terms regex-escaped).</span></span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>esc <span class="ot">&lt;-</span> <span class="cf">function</span>(x) <span class="fu">gsub</span>(<span class="st">"([][(){}.^$*+?</span><span class="sc">\\\\</span><span class="st">|-])"</span>, <span class="st">"</span><span class="sc">\\\\\\</span><span class="st">1"</span>, x)</span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>class_regex <span class="ot">&lt;-</span> <span class="fu">map_chr</span>(search_terms, <span class="sc">~</span> <span class="fu">paste0</span>(<span class="fu">esc</span>(.x), <span class="at">collapse =</span> <span class="st">"|"</span>))</span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>con_text <span class="ot">&lt;-</span> prebaseline<span class="sc">$</span>con_med <span class="sc">%&gt;%</span> <span class="fu">replace_na</span>(<span class="st">""</span>)</span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>med_flags <span class="ot">&lt;-</span> <span class="fu">imap_dfc</span>(structured_field, <span class="cf">function</span>(field, cls) {</span>
-<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>  structured <span class="ot">&lt;-</span> <span class="cf">if</span> (field <span class="sc">%in%</span> <span class="fu">names</span>(prebaseline)) {</span>
-<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">replace_na</span>(prebaseline[[field]] <span class="sc">==</span> <span class="dv">1</span>, <span class="cn">FALSE</span>)</span>
-<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> <span class="cn">FALSE</span></span>
-<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>  freetext <span class="ot">&lt;-</span> <span class="fu">str_detect</span>(con_text, <span class="fu">regex</span>(class_regex[[cls]], <span class="at">ignore_case =</span> <span class="cn">TRUE</span>))</span>
-<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tibble</span>(<span class="sc">!!</span><span class="at">cls :=</span> <span class="fu">as.integer</span>(structured <span class="sc">|</span> freetext))</span>
-<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>})</span>
-<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a>medications <span class="ot">&lt;-</span> <span class="fu">bind_cols</span>(<span class="at">record_id =</span> prebaseline<span class="sc">$</span>record_id, med_flags) <span class="sc">%&gt;%</span></span>
-<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">AIN_con_med_any =</span> <span class="fu">as.integer</span>(</span>
-<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a>    <span class="fu">rowSums</span>(<span class="fu">across</span>(<span class="fu">all_of</span>(<span class="fu">names</span>(structured_field)))) <span class="sc">&gt;</span> <span class="dv">0</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
-</div>
-</section>
-<section id="baseline-rpdr-labs-closest-to-baseline-visit" class="level1">
-<h1>8 Baseline RPDR labs (closest to baseline visit)</h1>
-<p><code>baseline_hgb</code> and <code>baseline_albumin</code> are the RPDR results with the <strong>smallest absolute day-difference</strong> from the baseline visit date. Ties prefer the value obtained <strong>prior to</strong> the visit. Anything &gt; 30 days away is coded missing (SAP §“Baseline Hemoglobin / Albumin”).</p>
-<blockquote class="blockquote">
-<p>Requires an <code>EMPI</code> ↔︎ <code>record_id</code> crosswalk so RPDR (keyed by EMPI) can join to REDCap (keyed by record_id). Set <code>EMPI</code> from the export if present.</p>
-</blockquote>
-<div class="cell">
-<details class="code-fold">
-<summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Closest-lab-to-date helper: smallest |day-diff| from the index date.</span></span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>closest_lab <span class="ot">&lt;-</span> <span class="cf">function</span>(lab_df, index_df, group_id, varname, <span class="at">window =</span> <span class="dv">30</span>) {</span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  lab_df <span class="sc">%&gt;%</span></span>
-<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">filter</span>(Group_Id <span class="sc">==</span> group_id, <span class="fu">grepl</span>(<span class="st">"^</span><span class="sc">\\</span><span class="st">d+</span><span class="sc">\\</span><span class="st">.?</span><span class="sc">\\</span><span class="st">d*$"</span>, Result)) <span class="sc">%&gt;%</span></span>
-<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">Result =</span> <span class="fu">as.numeric</span>(Result)) <span class="sc">%&gt;%</span></span>
-<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">inner_join</span>(index_df, <span class="at">by =</span> <span class="st">"EMPI"</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">diff =</span> <span class="fu">as.numeric</span>(Seq_Date_Time <span class="sc">-</span> baseline_visit_date)) <span class="sc">%&gt;%</span></span>
-<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">filter</span>(<span class="fu">abs</span>(diff) <span class="sc">&lt;=</span> window) <span class="sc">%&gt;%</span></span>
-<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>    <span class="co"># smallest |diff| first; ties → prior (diff &lt;= 0) preferred</span></span>
-<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">arrange</span>(EMPI, <span class="fu">abs</span>(diff), diff <span class="sc">&gt;</span> <span class="dv">0</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">distinct</span>(EMPI, <span class="at">.keep_all =</span> <span class="cn">TRUE</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">transmute</span>(EMPI, <span class="sc">!!</span><span class="at">varname :=</span> Result)</span>
-<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a>lab <span class="ot">&lt;-</span> <span class="fu">read.table</span>(rpdr_lab_path, <span class="at">sep =</span> <span class="st">"|"</span>, <span class="at">fill =</span> <span class="cn">TRUE</span>, <span class="at">quote =</span> <span class="st">""</span>,</span>
-<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a>                  <span class="at">header =</span> <span class="cn">TRUE</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(EMPI, Seq_Date_Time, Result, Group_Id)</span>
-<span id="cb11-18"><a href="#cb11-18" aria-hidden="true" tabindex="-1"></a>lab<span class="sc">$</span>Seq_Date_Time <span class="ot">&lt;-</span> <span class="fu">as.Date</span>(lab<span class="sc">$</span>Seq_Date_Time, <span class="st">"%m/%d/%Y"</span>)</span>
-<span id="cb11-19"><a href="#cb11-19" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-20"><a href="#cb11-20" aria-hidden="true" tabindex="-1"></a><span class="co"># baseline visit date + EMPI per record (visit_date lives in baseline_arm_1)</span></span>
-<span id="cb11-21"><a href="#cb11-21" aria-hidden="true" tabindex="-1"></a>index_df <span class="ot">&lt;-</span> baseline <span class="sc">%&gt;%</span></span>
-<span id="cb11-22"><a href="#cb11-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">transmute</span>(record_id, EMPI, <span class="at">baseline_visit_date =</span> <span class="fu">as.Date</span>(visit_date)) <span class="sc">%&gt;%</span></span>
-<span id="cb11-23"><a href="#cb11-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(EMPI))</span>
-<span id="cb11-24"><a href="#cb11-24" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-25"><a href="#cb11-25" aria-hidden="true" tabindex="-1"></a>hgb <span class="ot">&lt;-</span> <span class="fu">closest_lab</span>(lab, index_df, HGB_GROUP, <span class="st">"baseline_hgb"</span>)</span>
-<span id="cb11-26"><a href="#cb11-26" aria-hidden="true" tabindex="-1"></a>alb <span class="ot">&lt;-</span> <span class="fu">closest_lab</span>(lab, index_df, ALB_GROUP, <span class="st">"baseline_albumin"</span>)</span>
-<span id="cb11-27"><a href="#cb11-27" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-28"><a href="#cb11-28" aria-hidden="true" tabindex="-1"></a>rpdr_labs <span class="ot">&lt;-</span> index_df <span class="sc">%&gt;%</span></span>
-<span id="cb11-29"><a href="#cb11-29" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(record_id, EMPI) <span class="sc">%&gt;%</span></span>
-<span id="cb11-30"><a href="#cb11-30" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(hgb, <span class="at">by =</span> <span class="st">"EMPI"</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb11-31"><a href="#cb11-31" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(alb, <span class="at">by =</span> <span class="st">"EMPI"</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb11-32"><a href="#cb11-32" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(record_id, baseline_hgb, baseline_albumin)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
-</div>
-</section>
-<section id="assemble-one-row-per-participant" class="level1">
-<h1>9 Assemble one row per participant</h1>
-<div class="cell">
-<details class="code-fold">
-<summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>aim2_master <span class="ot">&lt;-</span> demographics <span class="sc">%&gt;%</span></span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(comorbidities, <span class="at">by =</span> <span class="st">"record_id"</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(autoimmune,    <span class="at">by =</span> <span class="st">"record_id"</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(kidney,        <span class="at">by =</span> <span class="st">"record_id"</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(ici,           <span class="at">by =</span> <span class="st">"record_id"</span>) <span class="sc">%&gt;%</span></span>
-<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(medications,   <span class="at">by =</span> <span class="st">"record_id"</span>)</span>
-<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Attach RPDR labs only if that chunk was run (data available)</span></span>
-<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="fu">exists</span>(<span class="st">"rpdr_labs"</span>)) {</span>
-<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>  aim2_master <span class="ot">&lt;-</span> aim2_master <span class="sc">%&gt;%</span> <span class="fu">left_join</span>(rpdr_labs, <span class="at">by =</span> <span class="st">"record_id"</span>)</span>
-<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a><span class="fu">saveRDS</span>(aim2_master, <span class="st">"aim2_master.rds"</span>)</span>
-<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a><span class="fu">glimpse</span>(aim2_master)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-</details>
-</div>
-</section>
-<section id="variable-dictionary-created-here" class="level1">
-<h1>10 Variable dictionary (created here)</h1>
+<section id="redcap" class="level1">
+<h1>REDCap</h1>
 <table class="caption-top table">
 <colgroup>
 <col style="width: 33%">
@@ -556,14 +272,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="header">
 <th>Variable</th>
 <th>Type</th>
-<th>Source / definition</th>
+<th>Definition</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
 <td><code>sex</code>, <code>race</code>, <code>ethnicity</code>, <code>study_arm</code></td>
 <td>factor</td>
-<td>Pre-baseline demographics (labelled)</td>
+<td>Pre-baseline demographics, labelled</td>
 </tr>
 <tr class="even">
 <td><code>cirrhosis</code></td>
@@ -598,17 +314,17 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="even">
 <td><code>autoimmune_history</code></td>
 <td>0/1</td>
-<td>any of 18 autoimmune comorbidity boxes</td>
+<td>1 if any of 18 autoimmune comorbidity boxes is checked</td>
 </tr>
 <tr class="odd">
 <td><code>baseline_egfr</code></td>
 <td>continuous</td>
-<td><code>egfr</code> @ baseline</td>
+<td><code>egfr</code> at baseline event (mL/min/1.73 m²)</td>
 </tr>
 <tr class="even">
 <td><code>baseline_ckd_stage</code></td>
 <td>factor G1–G5</td>
-<td>KDIGO categories of <code>baseline_egfr</code></td>
+<td>KDIGO GFR categories of <code>baseline_egfr</code></td>
 </tr>
 <tr class="odd">
 <td><code>baseline_ckd_binary</code></td>
@@ -618,7 +334,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <tr class="even">
 <td><code>baseline_ici_treatment</code></td>
 <td>factor (11)</td>
-<td><code>ici_type</code> @ early-treatment</td>
+<td><code>ici_type</code> at early-treatment event</td>
 </tr>
 <tr class="odd">
 <td><code>ici_regimen_class</code></td>
@@ -626,22 +342,271 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <td>mechanism class of <code>ici_type</code></td>
 </tr>
 <tr class="even">
-<td><code>ppi</code>,<code>antibiotic</code>,<code>tmp_smx</code>,<code>nsaid</code>,<code>allopurinol</code>,<code>antiepileptic</code></td>
+<td><code>ppi</code>, <code>antibiotic</code>, <code>tmp_smx</code>, <code>nsaid</code>, <code>allopurinol</code>, <code>antiepileptic</code></td>
 <td>0/1</td>
-<td>structured field OR <code>con_med</code> free-text</td>
+<td>structured REDCap field OR <code>con_med</code> free-text match</td>
 </tr>
 <tr class="odd">
 <td><code>AIN_con_med_any</code></td>
 <td>0/1</td>
-<td>any of the six medication classes</td>
-</tr>
-<tr class="even">
-<td><code>baseline_hgb</code>, <code>baseline_albumin</code></td>
-<td>continuous</td>
-<td>RPDR lab closest to baseline visit (±30 d)</td>
+<td>1 if any of the six medication classes is present</td>
 </tr>
 </tbody>
 </table>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Demographics — numeric REDCap codes labelled as factors for Table 1.</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>demographics <span class="ot">&lt;-</span> prebaseline <span class="sc">%&gt;%</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">transmute</span>(</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    record_id,</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">sex =</span> <span class="fu">factor</span>(sex, <span class="at">levels =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>),</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>                 <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">"Male"</span>, <span class="st">"Female"</span>, <span class="st">"Other"</span>)),</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">race =</span> <span class="fu">factor</span>(race, <span class="at">levels =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>, <span class="dv">4</span>),</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>                  <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">"White"</span>, <span class="st">"Black"</span>, <span class="st">"Asian"</span>, <span class="st">"Other"</span>)),</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">ethnicity =</span> <span class="fu">factor</span>(ethnicity, <span class="at">levels =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>),</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>                       <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">"Hispanic"</span>, <span class="st">"Non-Hispanic"</span>)),</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">study_arm =</span> <span class="fu">factor</span>(</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>      study_arm, <span class="at">levels =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>),</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>      <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">"Metastatic melanoma + ICI"</span>,</span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>                 <span class="st">"Adjuvant stage II–III melanoma + ICI"</span>,</span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>                 <span class="st">"Control stage I–IIIA melanoma, no ICI"</span>))</span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Binary / composite comorbidities (0 = Absent, 1 = Present).</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>comorbidities <span class="ot">&lt;-</span> prebaseline <span class="sc">%&gt;%</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">transmute</span>(</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    record_id,</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">cirrhosis    =</span> <span class="fu">any_box</span>(prebaseline, <span class="st">"comorb_gi___9"</span>),</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">asvcd        =</span> <span class="fu">any_box</span>(prebaseline, <span class="fu">c</span>(<span class="st">"comorb_cardiac___1"</span>, <span class="st">"comorb_neuro___3"</span>)),</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">chf          =</span> <span class="fu">any_box</span>(prebaseline, <span class="st">"comorb_cardiac___5"</span>),</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">hypertension =</span> <span class="fu">any_box</span>(prebaseline, <span class="st">"comorb_cardiac___4"</span>),</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">copd         =</span> <span class="fu">any_box</span>(prebaseline, <span class="st">"comorb_pulm___2"</span>),</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">diabetes     =</span> <span class="fu">any_box</span>(prebaseline, <span class="fu">c</span>(<span class="st">"comorb_endocrine___3"</span>, <span class="st">"comorb_endocrine___4"</span>))</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># autoimmune_history = 1 if ANY pre-existing autoimmune comorbidity box is checked.</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>autoimmune_boxes <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="st">"comorb_rheum___1"</span>, <span class="st">"comorb_rheum___3"</span>,</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>  <span class="st">"comorb_pulm___3"</span>,</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>  <span class="st">"comorb_cardiac___6"</span>,</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>  <span class="st">"comorb_gi___1"</span>, <span class="st">"comorb_gi___3"</span>, <span class="st">"comorb_gi___4"</span>, <span class="st">"comorb_gi___5"</span>, <span class="st">"comorb_gi___8"</span>,</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>  <span class="st">"comorb_derm___1"</span>, <span class="st">"comorb_derm___2"</span>, <span class="st">"comorb_derm___3"</span>, <span class="st">"comorb_derm___4"</span>,</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>  <span class="st">"comorb_neuro___1"</span>, <span class="st">"comorb_neuro___2"</span>,</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>  <span class="st">"comorb_endocrine___2"</span>, <span class="st">"comorb_endocrine___3"</span>,</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>  <span class="st">"comorb_heme___1"</span></span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>autoimmune <span class="ot">&lt;-</span> prebaseline <span class="sc">%&gt;%</span></span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">transmute</span>(record_id,</span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>            <span class="at">autoimmune_history =</span> <span class="fu">any_box</span>(prebaseline, autoimmune_boxes))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Baseline kidney function: egfr at baseline event → KDIGO stage + &lt;60 binary.</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="co"># KDIGO bands are inclusive at the top (G2 = 60–89, G1 ≥90); right = FALSE</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="co"># with these breaks reproduces that: &lt;15 G5 · 15–29 G4 · 30–44 G3b ·</span></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="co"># 45–59 G3a · 60–89 G2 · ≥90 G1.</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>kidney <span class="ot">&lt;-</span> baseline <span class="sc">%&gt;%</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">transmute</span>(</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>    record_id,</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">baseline_egfr =</span> <span class="fu">as.numeric</span>(egfr),</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">baseline_ckd_stage =</span> <span class="fu">cut</span>(</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>      baseline_egfr,</span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>      <span class="at">breaks =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="cn">Inf</span>, <span class="dv">15</span>, <span class="dv">30</span>, <span class="dv">45</span>, <span class="dv">60</span>, <span class="dv">90</span>, <span class="cn">Inf</span>),</span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>      <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">"G5"</span>, <span class="st">"G4"</span>, <span class="st">"G3b"</span>, <span class="st">"G3a"</span>, <span class="st">"G2"</span>, <span class="st">"G1"</span>),</span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>      <span class="at">right  =</span> <span class="cn">FALSE</span>),</span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">baseline_ckd_binary =</span> <span class="fu">if_else</span>(baseline_egfr <span class="sc">&lt;</span> <span class="dv">60</span>, <span class="dv">1</span>L, <span class="dv">0</span>L)  <span class="co"># 1 = G3a–G5</span></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">baseline_ckd_stage =</span> <span class="fu">factor</span>(</span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>    baseline_ckd_stage, <span class="at">levels =</span> <span class="fu">c</span>(<span class="st">"G1"</span>, <span class="st">"G2"</span>, <span class="st">"G3a"</span>, <span class="st">"G3b"</span>, <span class="st">"G4"</span>, <span class="st">"G5"</span>)))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Baseline ICI regimen from ici_type at the Early Treatment (Week 6–12) event.</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="co"># ici_regimen_class collapses the 11 types into 4 mechanism classes.</span></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>ici <span class="ot">&lt;-</span> early_tx <span class="sc">%&gt;%</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">transmute</span>(</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    record_id,</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">baseline_ici_treatment =</span> <span class="fu">factor</span>(</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>      ici_type, <span class="at">levels =</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">11</span>,</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>      <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">"Pembrolizumab"</span>, <span class="st">"Nivolumab"</span>, <span class="st">"Ipilimumab"</span>, <span class="st">"Relatlimab"</span>,</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>                 <span class="st">"Avelumab"</span>, <span class="st">"Durvalumab"</span>, <span class="st">"Atezolizumab"</span>,</span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>                 <span class="st">"Nivolumab/Ipilimumab"</span>, <span class="st">"Nivolumab/Relatlimab"</span>,</span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>                 <span class="st">"Other"</span>, <span class="st">"Not receiving ICI"</span>)),</span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>    <span class="at">ici_regimen_class =</span> <span class="fu">factor</span>(</span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a>      <span class="fu">case_when</span>(</span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>        ici_type <span class="sc">%in%</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">5</span>, <span class="dv">6</span>, <span class="dv">7</span>) <span class="sc">~</span> <span class="dv">1</span>L,   <span class="co"># PD-(L)1 monotherapy</span></span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>        ici_type <span class="sc">%in%</span> <span class="fu">c</span>(<span class="dv">3</span>, <span class="dv">8</span>)          <span class="sc">~</span> <span class="dv">2</span>L,   <span class="co"># CTLA-4–containing</span></span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>        ici_type <span class="sc">%in%</span> <span class="fu">c</span>(<span class="dv">4</span>, <span class="dv">9</span>)          <span class="sc">~</span> <span class="dv">3</span>L,   <span class="co"># LAG-3–containing</span></span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>        ici_type <span class="sc">%in%</span> <span class="fu">c</span>(<span class="dv">10</span>, <span class="dv">11</span>)        <span class="sc">~</span> <span class="dv">4</span>L    <span class="co"># Other / No active ICI</span></span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>      ),</span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>      <span class="at">levels =</span> <span class="dv">1</span><span class="sc">:</span><span class="dv">4</span>,</span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a>      <span class="at">labels =</span> <span class="fu">c</span>(<span class="st">"PD-(L)1 monotherapy"</span>, <span class="st">"CTLA-4–containing"</span>,</span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a>                 <span class="st">"LAG-3–containing"</span>, <span class="st">"Other/No active ICI"</span>))</span>
+<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Concomitant meds: six AIN-associated classes. Each free-text term is matched</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="co"># case-insensitively against con_med; a class is present if its structured</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="co"># REDCap field == 1 OR a term matches.</span></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>search_terms <span class="ot">&lt;-</span> <span class="fu">list</span>(</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">ppi =</span> <span class="fu">c</span>(<span class="st">"omeprazole"</span>,<span class="st">"Prilosec"</span>,<span class="st">"esomeprazole"</span>,<span class="st">"Nexium"</span>,<span class="st">"pantoprazole"</span>,<span class="st">"Protonix"</span>,</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>          <span class="st">"lansoprazole"</span>,<span class="st">"Prevacid"</span>,<span class="st">"dexlansoprazole"</span>,<span class="st">"Dexilant"</span>,<span class="st">"rabeprazole"</span>,<span class="st">"Aciphex"</span>),</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">antibiotic =</span> <span class="fu">c</span>(<span class="st">"amoxicillin"</span>,<span class="st">"Augmentin"</span>,<span class="st">"penicillin"</span>,<span class="st">"ampicillin"</span>,<span class="st">"dicloxacillin"</span>,</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>          <span class="st">"cephalexin"</span>,<span class="st">"Keflex"</span>,<span class="st">"cefazolin"</span>,<span class="st">"ceftriaxone"</span>,<span class="st">"Rocephin"</span>,<span class="st">"cefepime"</span>,</span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>          <span class="st">"cefpodoxime"</span>,<span class="st">"cefdinir"</span>,<span class="st">"ciprofloxacin"</span>,<span class="st">"Cipro"</span>,<span class="st">"levofloxacin"</span>,<span class="st">"Levaquin"</span>,</span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>          <span class="st">"moxifloxacin"</span>,<span class="st">"Avelox"</span>,<span class="st">"azithromycin"</span>,<span class="st">"Zithromax"</span>,<span class="st">"clarithromycin"</span>,<span class="st">"Biaxin"</span>,</span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>          <span class="st">"erythromycin"</span>,<span class="st">"doxycycline"</span>,<span class="st">"minocycline"</span>,<span class="st">"tetracycline"</span>,<span class="st">"clindamycin"</span>,</span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>          <span class="st">"Cleocin"</span>,<span class="st">"metronidazole"</span>,<span class="st">"Flagyl"</span>,<span class="st">"nitrofurantoin"</span>,<span class="st">"Macrobid"</span>,<span class="st">"fosfomycin"</span>,</span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>          <span class="st">"Monurol"</span>,<span class="st">"vancomycin"</span>,<span class="st">"linezolid"</span>,<span class="st">"Zyvox"</span>),</span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>  <span class="at">tmp_smx =</span> <span class="fu">c</span>(<span class="st">"trimethoprim-sulfamethoxazole"</span>,<span class="st">"TMP-SMX"</span>,<span class="st">"TMP/SMX"</span>,<span class="st">"sulfamethoxazole"</span>,</span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>          <span class="st">"cotrimoxazole"</span>,<span class="st">"co-trimoxazole"</span>,<span class="st">"Bactrim"</span>,<span class="st">"Septra"</span>),</span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>  <span class="at">nsaid =</span> <span class="fu">c</span>(<span class="st">"ibuprofen"</span>,<span class="st">"Advil"</span>,<span class="st">"Motrin"</span>,<span class="st">"naproxen"</span>,<span class="st">"Aleve"</span>,<span class="st">"diclofenac"</span>,<span class="st">"Voltaren"</span>,</span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>          <span class="st">"indomethacin"</span>,<span class="st">"Indocin"</span>,<span class="st">"meloxicam"</span>,<span class="st">"Mobic"</span>,<span class="st">"celecoxib"</span>,<span class="st">"Celebrex"</span>,</span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a>          <span class="st">"ketorolac"</span>,<span class="st">"Toradol"</span>,<span class="st">"nabumetone"</span>,<span class="st">"Relafen"</span>,<span class="st">"sulindac"</span>,<span class="st">"etodolac"</span>,</span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a>          <span class="st">"piroxicam"</span>,<span class="st">"Feldene"</span>,<span class="st">"oxaprozin"</span>,<span class="st">"Daypro"</span>),</span>
+<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a>  <span class="at">allopurinol =</span> <span class="fu">c</span>(<span class="st">"allopurinol"</span>,<span class="st">"Zyloprim"</span>,<span class="st">"Aloprim"</span>),</span>
+<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a>  <span class="at">antiepileptic =</span> <span class="fu">c</span>(<span class="st">"carbamazepine"</span>,<span class="st">"Tegretol"</span>,<span class="st">"oxcarbazepine"</span>,<span class="st">"Trileptal"</span>,<span class="st">"phenytoin"</span>,</span>
+<span id="cb9-22"><a href="#cb9-22" aria-hidden="true" tabindex="-1"></a>          <span class="st">"Dilantin"</span>,<span class="st">"fosphenytoin"</span>,<span class="st">"Cerebyx"</span>,<span class="st">"lamotrigine"</span>,<span class="st">"Lamictal"</span>,<span class="st">"phenobarbital"</span>)</span>
+<span id="cb9-23"><a href="#cb9-23" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb9-24"><a href="#cb9-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-25"><a href="#cb9-25" aria-hidden="true" tabindex="-1"></a>structured_field <span class="ot">&lt;-</span> <span class="fu">c</span>(</span>
+<span id="cb9-26"><a href="#cb9-26" aria-hidden="true" tabindex="-1"></a>  <span class="at">ppi           =</span> <span class="st">"ppi"</span>,</span>
+<span id="cb9-27"><a href="#cb9-27" aria-hidden="true" tabindex="-1"></a>  <span class="at">antibiotic    =</span> <span class="st">"nephrotox_drugs___1"</span>,</span>
+<span id="cb9-28"><a href="#cb9-28" aria-hidden="true" tabindex="-1"></a>  <span class="at">tmp_smx       =</span> <span class="st">"nephrotox_drugs___2"</span>,</span>
+<span id="cb9-29"><a href="#cb9-29" aria-hidden="true" tabindex="-1"></a>  <span class="at">nsaid         =</span> <span class="st">"nephrotox_drugs___3"</span>,</span>
+<span id="cb9-30"><a href="#cb9-30" aria-hidden="true" tabindex="-1"></a>  <span class="at">allopurinol   =</span> <span class="st">"nephrotox_drugs___4"</span>,</span>
+<span id="cb9-31"><a href="#cb9-31" aria-hidden="true" tabindex="-1"></a>  <span class="at">antiepileptic =</span> <span class="st">"nephrotox_drugs___5"</span></span>
+<span id="cb9-32"><a href="#cb9-32" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Build a case-insensitive alternation regex per class (terms regex-escaped),</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="co"># then flag each class and AIN_con_med_any.</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>esc <span class="ot">&lt;-</span> <span class="cf">function</span>(x) <span class="fu">gsub</span>(<span class="st">"([][(){}.^$*+?</span><span class="sc">\\\\</span><span class="st">|-])"</span>, <span class="st">"</span><span class="sc">\\\\\\</span><span class="st">1"</span>, x)</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>class_regex <span class="ot">&lt;-</span> <span class="fu">map_chr</span>(search_terms, <span class="sc">~</span> <span class="fu">paste0</span>(<span class="fu">esc</span>(.x), <span class="at">collapse =</span> <span class="st">"|"</span>))</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>con_text <span class="ot">&lt;-</span> prebaseline<span class="sc">$</span>con_med <span class="sc">%&gt;%</span> <span class="fu">replace_na</span>(<span class="st">""</span>)</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>med_flags <span class="ot">&lt;-</span> <span class="fu">imap_dfc</span>(structured_field, <span class="cf">function</span>(field, cls) {</span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>  structured <span class="ot">&lt;-</span> <span class="cf">if</span> (field <span class="sc">%in%</span> <span class="fu">names</span>(prebaseline)) {</span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">replace_na</span>(prebaseline[[field]] <span class="sc">==</span> <span class="dv">1</span>, <span class="cn">FALSE</span>)</span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> <span class="cn">FALSE</span></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>  freetext <span class="ot">&lt;-</span> <span class="fu">str_detect</span>(con_text, <span class="fu">regex</span>(class_regex[[cls]], <span class="at">ignore_case =</span> <span class="cn">TRUE</span>))</span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tibble</span>(<span class="sc">!!</span><span class="at">cls :=</span> <span class="fu">as.integer</span>(structured <span class="sc">|</span> freetext))</span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a>medications <span class="ot">&lt;-</span> <span class="fu">bind_cols</span>(<span class="at">record_id =</span> prebaseline<span class="sc">$</span>record_id, med_flags) <span class="sc">%&gt;%</span></span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">AIN_con_med_any =</span> <span class="fu">as.integer</span>(</span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a>    <span class="fu">rowSums</span>(<span class="fu">across</span>(<span class="fu">all_of</span>(<span class="fu">names</span>(structured_field)))) <span class="sc">&gt;</span> <span class="dv">0</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+</section>
+<section id="rpdr" class="level1">
+<h1>RPDR</h1>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Variable</th>
+<th>Type</th>
+<th>Definition</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>baseline_hgb</code></td>
+<td>continuous</td>
+<td>RPDR hemoglobin closest to baseline visit (±30 d; ties prefer prior)</td>
+</tr>
+<tr class="even">
+<td><code>baseline_albumin</code></td>
+<td>continuous</td>
+<td>RPDR albumin closest to baseline visit (±30 d; ties prefer prior)</td>
+</tr>
+</tbody>
+</table>
+<blockquote class="blockquote">
+<p>Requires an <code>EMPI</code> ↔︎ <code>record_id</code> crosswalk so RPDR (keyed by <code>EMPI</code>) can join to REDCap (keyed by <code>record_id</code>). This block is <code>eval: false</code> until the RPDR pull and crosswalk are available.</p>
+</blockquote>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Closest-lab-to-date: smallest |day-diff| from the baseline visit; ties prefer</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="co"># the prior value (diff &lt;= 0); anything &gt; 30 days away is coded missing.</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>closest_lab <span class="ot">&lt;-</span> <span class="cf">function</span>(lab_df, index_df, group_id, varname, <span class="at">window =</span> <span class="dv">30</span>) {</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>  lab_df <span class="sc">%&gt;%</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">filter</span>(Group_Id <span class="sc">==</span> group_id, <span class="fu">grepl</span>(<span class="st">"^</span><span class="sc">\\</span><span class="st">d+</span><span class="sc">\\</span><span class="st">.?</span><span class="sc">\\</span><span class="st">d*$"</span>, Result)) <span class="sc">%&gt;%</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">Result =</span> <span class="fu">as.numeric</span>(Result)) <span class="sc">%&gt;%</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">inner_join</span>(index_df, <span class="at">by =</span> <span class="st">"EMPI"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">mutate</span>(<span class="at">diff =</span> <span class="fu">as.numeric</span>(Seq_Date_Time <span class="sc">-</span> baseline_visit_date)) <span class="sc">%&gt;%</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">filter</span>(<span class="fu">abs</span>(diff) <span class="sc">&lt;=</span> window) <span class="sc">%&gt;%</span></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>    <span class="fu">arrange</span>(EMPI, <span class="fu">abs</span>(diff), diff <span class="sc">&gt;</span> <span class="dv">0</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">distinct</span>(EMPI, <span class="at">.keep_all =</span> <span class="cn">TRUE</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">transmute</span>(EMPI, <span class="sc">!!</span><span class="at">varname :=</span> Result)</span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a>lab <span class="ot">&lt;-</span> <span class="fu">read.table</span>(rpdr_lab_path, <span class="at">sep =</span> <span class="st">"|"</span>, <span class="at">fill =</span> <span class="cn">TRUE</span>, <span class="at">quote =</span> <span class="st">""</span>,</span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a>                  <span class="at">header =</span> <span class="cn">TRUE</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(EMPI, Seq_Date_Time, Result, Group_Id)</span>
+<span id="cb11-18"><a href="#cb11-18" aria-hidden="true" tabindex="-1"></a>lab<span class="sc">$</span>Seq_Date_Time <span class="ot">&lt;-</span> <span class="fu">as.Date</span>(lab<span class="sc">$</span>Seq_Date_Time, <span class="st">"%m/%d/%Y"</span>)</span>
+<span id="cb11-19"><a href="#cb11-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-20"><a href="#cb11-20" aria-hidden="true" tabindex="-1"></a>index_df <span class="ot">&lt;-</span> baseline <span class="sc">%&gt;%</span></span>
+<span id="cb11-21"><a href="#cb11-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">transmute</span>(record_id, EMPI, <span class="at">baseline_visit_date =</span> <span class="fu">as.Date</span>(visit_date)) <span class="sc">%&gt;%</span></span>
+<span id="cb11-22"><a href="#cb11-22" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(<span class="sc">!</span><span class="fu">is.na</span>(EMPI))</span>
+<span id="cb11-23"><a href="#cb11-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-24"><a href="#cb11-24" aria-hidden="true" tabindex="-1"></a>hgb <span class="ot">&lt;-</span> <span class="fu">closest_lab</span>(lab, index_df, HGB_GROUP, <span class="st">"baseline_hgb"</span>)</span>
+<span id="cb11-25"><a href="#cb11-25" aria-hidden="true" tabindex="-1"></a>alb <span class="ot">&lt;-</span> <span class="fu">closest_lab</span>(lab, index_df, ALB_GROUP, <span class="st">"baseline_albumin"</span>)</span>
+<span id="cb11-26"><a href="#cb11-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-27"><a href="#cb11-27" aria-hidden="true" tabindex="-1"></a>rpdr_labs <span class="ot">&lt;-</span> index_df <span class="sc">%&gt;%</span></span>
+<span id="cb11-28"><a href="#cb11-28" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(record_id, EMPI) <span class="sc">%&gt;%</span></span>
+<span id="cb11-29"><a href="#cb11-29" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(hgb, <span class="at">by =</span> <span class="st">"EMPI"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb11-30"><a href="#cb11-30" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(alb, <span class="at">by =</span> <span class="st">"EMPI"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb11-31"><a href="#cb11-31" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(record_id, baseline_hgb, baseline_albumin)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<div class="cell">
+<details class="code-fold">
+<summary>Code</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Assemble one row per participant and write aim2_master.rds. RPDR labs are</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="co"># attached only if that block was run (data available).</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>aim2_master <span class="ot">&lt;-</span> demographics <span class="sc">%&gt;%</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(comorbidities, <span class="at">by =</span> <span class="st">"record_id"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(autoimmune,    <span class="at">by =</span> <span class="st">"record_id"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(kidney,        <span class="at">by =</span> <span class="st">"record_id"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(ici,           <span class="at">by =</span> <span class="st">"record_id"</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">left_join</span>(medications,   <span class="at">by =</span> <span class="st">"record_id"</span>)</span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="fu">exists</span>(<span class="st">"rpdr_labs"</span>)) {</span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>  aim2_master <span class="ot">&lt;-</span> aim2_master <span class="sc">%&gt;%</span> <span class="fu">left_join</span>(rpdr_labs, <span class="at">by =</span> <span class="st">"record_id"</span>)</span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a><span class="fu">saveRDS</span>(aim2_master, <span class="st">"aim2_master.rds"</span>)</span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a><span class="fu">glimpse</span>(aim2_master)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
 
 
 </section>
