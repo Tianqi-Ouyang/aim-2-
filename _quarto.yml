@@ -25,6 +25,7 @@ format:
       - custom.scss
     toc: true
     toc-depth: 4
+    toc-location: left
     code-fold: true
 
 execute:

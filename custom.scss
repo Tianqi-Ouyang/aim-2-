@@ -12,3 +12,17 @@ $dropdown-link-hover-bg: #e9ecef;
   color: #000000;
   background-color: #e9ecef;
 }
+
+/* Keep long content from spilling out of its column and overlapping
+   neighbouring layout (e.g. the table of contents). Wide tables and code
+   blocks scroll horizontally instead of overflowing. */
+.table-responsive,
+table {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+}
+pre {
+  max-width: 100%;
+  overflow-x: auto;
+}
