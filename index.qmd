@@ -7,11 +7,8 @@ date: "2026-06-30"
 # Project Overview
 
 Aim 2 examines **acute interstitial nephritis (AIN)** in melanoma patients
-treated with **immune checkpoint inhibitors (ICI)**. It is a separate study
-built on the data-management conventions of the
-[Sherley project](https://github.com/Tianqi-Ouyang/Sherley-project), with its
-own longitudinal REDCap project and Statistical Analysis Plan
-(`Tianqi_SAP.docx`).
+treated with **immune checkpoint inhibitors (ICI)**, with its own longitudinal
+REDCap project and Statistical Analysis Plan (`Tianqi_SAP.docx`).
 
 # Study Arms
 

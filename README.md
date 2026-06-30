@@ -1,10 +1,8 @@
 # Aim 2 — Melanoma · ICI · Acute Interstitial Nephritis
 
 Clinical-research analysis examining **acute interstitial nephritis (AIN)** in
-melanoma patients receiving **immune checkpoint inhibitors (ICI)**. Aim 2 is a
-separate study built on the data-management conventions of the
-[Sherley project](https://github.com/Tianqi-Ouyang/Sherley-project), with its
-own longitudinal REDCap project and Statistical Analysis Plan (`Tianqi_SAP.docx`).
+melanoma patients receiving **immune checkpoint inhibitors (ICI)**, with its own
+longitudinal REDCap project and Statistical Analysis Plan (`Tianqi_SAP.docx`).
 
 ## Study arms
 

@@ -41,8 +41,7 @@ library(lubridate)
 # 1 Configuration — input files
 
 > **FILL IN once the Aim 2 data arrives.** The variable logic below is fully
-> specified by the SAP; only these paths are project-specific. Filenames follow
-> the same conventions as the parent Cystatin C / Sherley pipeline.
+> specified by the SAP; only these paths are project-specific.
 
 ```{r}
 #| label: config
@@ -276,7 +275,7 @@ obtained **prior to** the visit. Anything > 30 days away is coded missing
 ```{r}
 #| label: rpdr-labs
 #| eval: false
-# Closest-lab-to-date helper (adapted from the Sherley pre_lab() convention).
+# Closest-lab-to-date helper: smallest |day-diff| from the index date.
 closest_lab <- function(lab_df, index_df, group_id, varname, window = 30) {
   lab_df %>%
     filter(Group_Id == group_id, grepl("^\\d+\\.?\\d*$", Result)) %>%

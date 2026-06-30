@@ -253,7 +253,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <section id="configuration-input-files" class="level1">
 <h1>1 Configuration — input files</h1>
 <blockquote class="blockquote">
-<p><strong>FILL IN once the Aim 2 data arrives.</strong> The variable logic below is fully specified by the SAP; only these paths are project-specific. Filenames follow the same conventions as the parent Cystatin C / Sherley pipeline.</p>
+<p><strong>FILL IN once the Aim 2 data arrives.</strong> The variable logic below is fully specified by the SAP; only these paths are project-specific.</p>
 </blockquote>
 <div class="cell">
 <details class="code-fold">
@@ -484,7 +484,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="cell">
 <details class="code-fold">
 <summary>Code</summary>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Closest-lab-to-date helper (adapted from the Sherley pre_lab() convention).</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Closest-lab-to-date helper: smallest |day-diff| from the index date.</span></span>
 <span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>closest_lab <span class="ot">&lt;-</span> <span class="cf">function</span>(lab_df, index_df, group_id, varname, <span class="at">window =</span> <span class="dv">30</span>) {</span>
 <span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  lab_df <span class="sc">%&gt;%</span></span>
 <span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">filter</span>(Group_Id <span class="sc">==</span> group_id, <span class="fu">grepl</span>(<span class="st">"^</span><span class="sc">\\</span><span class="st">d+</span><span class="sc">\\</span><span class="st">.?</span><span class="sc">\\</span><span class="st">d*$"</span>, Result)) <span class="sc">%&gt;%</span></span>

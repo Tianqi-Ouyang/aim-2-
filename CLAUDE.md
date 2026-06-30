@@ -8,9 +8,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Aim 2 is a clinical-research analysis investigating **acute interstitial
 nephritis (AIN)** in melanoma patients receiving **immune checkpoint inhibitors
-(ICI)**. It is a **separate project built on the Sherley project's conventions**
-(https://github.com/Tianqi-Ouyang/Sherley-project) but with its own longitudinal
-REDCap project, cohort, and Statistical Analysis Plan (`Tianqi_SAP.docx`).
+(ICI)**. It is a **standalone project** with its own longitudinal REDCap project,
+cohort, and Statistical Analysis Plan (`Tianqi_SAP.docx`).
 
 The cohort is three study arms:
 
@@ -48,9 +47,9 @@ renders for code review even before the REDCap/RPDR data files are present.
 
 ### Longitudinal REDCap structure (critical)
 
-Unlike the parent Sherley project (cross-sectional), Aim 2's REDCap export is
-**longitudinal**: one row per (`record_id` × `redcap_event_name`). Variables must
-be pulled from the correct event, then joined back to one row per `record_id`.
+Aim 2's REDCap export is **longitudinal**: one row per
+(`record_id` × `redcap_event_name`). Variables must be pulled from the correct
+event, then joined back to one row per `record_id`.
 `qmd/aim2_variables.qmd` splits the export into three event frames up front:
 
 | Event | Variables sourced |
@@ -78,9 +77,8 @@ be pulled from the correct event, then joined back to one row per `record_id`.
   (case-insensitive, regex-escaped). **`AIN_con_med_any`** = any of the six.
 - **`baseline_hgb` / `baseline_albumin`** — RPDR lab with the smallest absolute
   day-difference from the baseline visit; ties prefer the **prior** value; >30
-  days → missing. Implemented by `closest_lab()` (adapted from Sherley `pre_lab()`).
-  This chunk is `eval: false` until the RPDR pull + an `EMPI`↔`record_id`
-  crosswalk are available.
+  days → missing. Implemented by the local `closest_lab()` helper. This chunk is
+  `eval: false` until the RPDR pull + an `EMPI`↔`record_id` crosswalk are available.
 
 ### Reference categories / coding
 
@@ -91,13 +89,14 @@ be pulled from the correct event, then joined back to one row per `record_id`.
 ## Key R Packages
 
 tidyverse / dplyr / readxl (data), lubridate (dates), stringr + regex (free-text
-`con_med` search). Downstream analysis is expected to follow the Sherley stack
-(gtsummary/tableone for Table 1; tidycmprsk for competing-risks if AIN is modelled
-with death as a competing event).
+`con_med` search). Downstream analysis is expected to use gtsummary/tableone for
+Table 1 and tidycmprsk for competing-risks (if AIN is modelled with death as a
+competing event).
 
-## Conventions Carried From the Sherley Project
+## Project Conventions
 
 - `execute.eval: false` so the site renders without PHI data present.
 - PHI inputs (REDCap CSV, RPDR `.txt`, `.xlsx`, `.rds`) are git-ignored; only code
   and rendered `docs/` HTML are committed.
-- Closest-lab-to-index-date selection mirrors Sherley's `pre_lab()` logic.
+- Baseline RPDR labs are selected by smallest absolute day-difference from the
+  baseline visit (ties prefer the prior value); see `closest_lab()`.
